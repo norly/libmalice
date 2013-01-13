@@ -39,21 +39,18 @@ jmp _start_end	; poor man's exception handling
 
 global lmPrintChar
 lmPrintChar:	; void lmPrintChar(int chr)
-push eax	; will be: syscall number
+   ; eax	; will be: syscall number
 push ebx 	; will be: stdout fd
-push ecx 	; will be: character start address
-push edx	; will be: character counter
+   ; ecx 	; will be: character start address
+   ; edx	; will be: character counter
 
 mov  edx, 1	; print one char
-lea  ecx, [esp+20]	; address of the char
+lea  ecx, [esp+8]	; address of the char
 mov  ebx, 1	; stdout fd
 mov  eax, 4	; write()
 int 0x80
 
-pop edx
-pop ecx
 pop ebx
-pop eax
 ret
 
 
@@ -64,13 +61,13 @@ ret
 
 global lmPrintString
 lmPrintString:	; void lmPrintString(char *string)
-push eax	; will be: syscall number
+   ; eax	; will be: syscall number
 push ebx 	; will be: stdout fd
-push ecx 	; will be: character start address
-push edx	; will be: character counter
+   ; ecx 	; will be: character start address
+   ; edx	; will be: character counter
 
 mov  eax, 0		; prepare for holding a char
-mov  ecx, [esp+20]	; string start address
+mov  ecx, [esp+8]	; string start address
 mov  edx, -1		; init char counter to 0
 
 _print_string_loop:
@@ -83,10 +80,7 @@ mov  ebx, 1	; stdout fd
 mov  eax, 4	; write()
 int 0x80
 
-pop edx
-pop ecx
 pop ebx
-pop eax
 ret
 
 
@@ -97,11 +91,11 @@ ret
 
 global lmPrintInt32s
 lmPrintInt32s:	; void lmPrintInt(int num)
-push eax	; will be: dividend
+   ; eax	; will be: dividend
 push ebx	; will be: divisor
-push ecx 	; will be: character start address
-push edx	; will be: character counter
-mov eax, [esp+20]	; load num
+   ; ecx 	; will be: character start address
+   ; edx	; will be: character counter
+mov eax, [esp+8]	; load num
 sub esp, 12		; make space for converted integer
 lea ecx, [esp+11]	; string offset counter, start at lastchar+1
 			; so writing ends at 10 and char 11 is reserved
@@ -121,7 +115,7 @@ _print_int_loop:
 test eax, eax
 jne _print_int_loop
 
-cmp [esp+32], dword 0	; check for negative number
+cmp [esp+20], dword 0	; check for negative number
 jge _print_int_end	; skip for positive
 dec ecx
 mov [ecx], byte '-'	; add - sign
@@ -134,10 +128,7 @@ mov  eax, 4	; write()
 int 0x80	; let the number speak
 
 add esp, 12
-pop edx
-pop ecx
 pop ebx
-pop eax
 ret
 
 
@@ -149,8 +140,6 @@ ret
 global lmReadChar
 lmReadChar:	; int lmReadChar(void)
 push ebx
-push ecx
-push edx
 
 sub esp, 4	; make room for character to be read
 
@@ -172,8 +161,6 @@ mov al, [esp]
 
 _read_char_end:
 add esp, 4
-pop edx
-pop ecx
 pop ebx
 ret
 
@@ -187,8 +174,6 @@ ret
 global lmReadInt32s
 lmReadInt32s:	; int lmReadInt(void)
 push ebx
-push ecx
-push edx
 push esi	; negative number info
 push edi	; actual number
 
@@ -257,8 +242,6 @@ mov eax, edi	; Return value: The number read
 add esp, 4
 pop edi
 pop esi
-pop edx
-pop ecx
 pop ebx
 ret
 
