@@ -1,2 +1,4 @@
 *.o
 demo-printing
+demo-input-char
+demo-input-int
