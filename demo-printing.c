@@ -2,11 +2,16 @@
 
 int lmMain(void)
 {
-  lmPrintString("Goodbye cruel world, I had too much ");
-  lmPrintInt32s(-559038737);
-  lmPrintChar('.');
-  lmPrintChar('\n');
-  lmPrintString("Oh my, I'm still here... ok, I'll exit now.\n");
+  lmPrintString("This demo intersperses strings, integers and single characters:\n");
 
-  return 42;
+  lmPrintString("The integer ");
+  lmPrintInt32s(-559038737);
+  lmPrintString(" is negative");
+  lmPrintChar('.');
+  lmPrintChar(' ');
+  lmPrintInt32s(3);
+  lmPrintString(" is positive.");
+  lmPrintChar('\n');
+
+  return 0;
 }
