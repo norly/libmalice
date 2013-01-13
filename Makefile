@@ -7,7 +7,7 @@ LDFLAGS=
 SRCDIR=src
 BINDIR=build
 
-all: libmalice.o demo-printing demo-input-char demo-input-int demo-exitcode
+all: libmalice.o demo-printing demo-input-char demo-input-int demo-exitcode demo-exitclean
 
 libmalice.o: libmalice.asm
 	nasm $(NASMFLAGS) -o $@ $<
@@ -27,6 +27,9 @@ demo-input-int: demo-input-int.o libmalice.o
 demo-exitcode: demo-exitcode.o libmalice.o
 	ld $(LDFLAGS) -nostdlib -e _lmStart -o $@ $^
 
+demo-exitclean: demo-exitclean.o libmalice.o
+	ld $(LDFLAGS) -nostdlib -e _lmStart -o $@ $^
+
 
 .PHONY : clean
 clean:
@@ -35,3 +38,4 @@ clean:
 	rm -f demo-input-char
 	rm -f demo-input-int
 	rm -f demo-exitcode
+	rm -f demo-exitclean
