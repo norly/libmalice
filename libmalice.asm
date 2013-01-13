@@ -5,14 +5,13 @@
 extern lmMain
 
 section .text ; start of code
+
+
 global _lmStart ; export the entry point function
-
-
-
-_lmStart:
+_lmStart:	; void lmStart(void)
 mov [__start_esp], esp
 call lmMain
-_start_end:
+.end:
 mov esp, [__start_esp]
 	; Cleanup can be done here if necessary
 mov ebx, eax
@@ -28,7 +27,7 @@ int 0x80
 global lmExit
 lmExit:	; void lmExit(int exitstatus)
 mov eax, [esp+4]	; pass the exit status through as eax
-jmp _start_end	; poor man's exception handling
+jmp _lmStart.end	; poor man's exception handling
 	; ret is not necessary
 
 
@@ -70,11 +69,11 @@ mov  eax, 0		; prepare for holding a char
 mov  ecx, [esp+8]	; string start address
 mov  edx, -1		; init char counter to 0
 
-_print_string_loop:
+.loop:
 	inc  edx		; char_counter++
 	mov  al, [ecx+edx]	; check next char
 cmp al, 0			; if != '\0' continue
-jne _print_string_loop
+jne .loop
 
 mov  ebx, 1	; stdout fd
 mov  eax, 4	; write()
@@ -103,24 +102,24 @@ lea ecx, [esp+11]	; string offset counter, start at lastchar+1
 mov ebx, 10		; always divide by 10
 
 cmp eax, dword 0	; if the number is negative, negate
-jge _print_int_loop
+jge .loop
 neg eax			; great fun at -2147483648. Overflow ftw!
 
-_print_int_loop:
+.loop:
 	mov edx, 0
 	idiv ebx
 	add edx, 0x30
 	dec ecx		; write next char
 	mov [ecx], dl
 test eax, eax
-jne _print_int_loop
+jne .loop
 
 cmp [esp+20], dword 0	; check for negative number
-jge _print_int_end	; skip for positive
+jge .end		; skip for positive
 dec ecx
 mov [ecx], byte '-'	; add - sign
 
-_print_int_end:
+.end:
 lea edx, [esp+11]
 sub edx, ecx	; number of chars
 mov  ebx, 1	; stdout fd
@@ -150,16 +149,16 @@ mov eax, 3	; read()
 int 0x80
 
 cmp eax, 0
-jne _read_char_ok	; No end of input -> return char
+jne .ok		; No end of input -> return char
 
-mov eax, 0		; End of Input -> return 0
-jmp _read_char_end
+mov eax, 0	; End of Input -> return 0
+jmp .end
 
-_read_char_ok:
+.ok:
 mov eax, 0
 mov al, [esp]
 
-_read_char_end:
+.end:
 add esp, 4
 pop ebx
 ret
@@ -183,7 +182,7 @@ mov esi, 0	; 0 = positive
 mov edi, 0	; start with 0
 
 
-_read_int_next:
+.next:
 mov edx, 1	; number of chars
 mov ecx, esp	; character buffer
 mov ebx, 0	; stdin fd
@@ -191,38 +190,38 @@ mov eax, 3	; read()
 int 0x80
 
 cmp eax, 0
-je _read_int_neg	; End of input
+je .neg		; End of input
 
 mov eax, 0
 mov al, [esp]
 
 cmp al, '-'
-jne _read_int_process_digit
+jne .process_digit
 mov esi, 1
-jmp _read_int_next
+jmp .next
 
-_read_int_process_digit:
+.process_digit:
 cmp al, 0x30
-jb _read_int_neg	; char < '0'
+jb .neg		; char < '0'
 cmp al, 0x39
-ja _read_int_neg	; char > '9'
+ja .neg		; char > '9'
 
 sub eax, 0x30
 imul edi, 10	; shift old digits
 add edi, eax	; add new digit
 
-jmp _read_int_next
+jmp .next
 
 
-_read_int_neg:
+.neg:
 test esi, esi
-jz _read_int_skip_loop
+jz .skip_loop
 neg edi
 
 
-_read_int_skip_loop:	; read and skip until newline is encountered
+.skip_loop:	; read and skip until newline is encountered
 cmp byte [esp], 0x0a
-je _read_int_end	; if newline found -> end reading
+je .end		; if newline found -> end reading
 
 mov edx, 1	; number of chars
 mov ecx, esp	; character buffer
@@ -231,12 +230,12 @@ mov eax, 3	; read()
 int 0x80
 
 cmp eax, 0
-je _read_int_end	; End of input -> end reading
+je .end		; End of input -> end reading
 
-jmp _read_int_skip_loop
+jmp .skip_loop
 
 
-_read_int_end:
+.end:
 mov eax, edi	; Return value: The number read
 
 add esp, 4
